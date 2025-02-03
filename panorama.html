@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3D Viewer - 720° Image</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden;
+        }
+        canvas { 
+            display: block;
+            margin: 30px; /* Cách các cạnh 30px */
+        }
+
+        #fov-slider {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            width: 200px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 5px;
+            font-family: Arial, sans-serif;
+        }
+
+        #fov-slider label {
+            font-size: 14px;
+        }
+
+        #fov-slider span {
+            font-size: 14px;
+        }
+
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Đảm bảo hiển thị tốt trên di động -->
+</head>
+<body>
+    <!-- Thêm thanh kéo FOV -->
+    <div id="fov-slider">
+        <label for="fov">FOV: </label>
+        <input type="range" id="fov" min="75" max="120" value="86">
+        <span id="fov-value">86</span>
+    </div>
+
+    <script>
+        let scene, camera, renderer, sphere;
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+
+        function init() {
+            // Tạo scene, camera và renderer
+            scene = new THREE.Scene();
+            const aspectRatio = (window.innerWidth - 60) / (window.innerHeight - 60); // Điều chỉnh tỉ lệ cho camera
+            camera = new THREE.PerspectiveCamera(120, aspectRatio, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth - 60, window.innerHeight - 60); // Điều chỉnh kích thước canvas
+            document.body.appendChild(renderer.domElement);
+
+            // Tạo hình cầu
+            const geometry = new THREE.SphereGeometry(500, 60, 40);
+            geometry.scale(-1, 1, 1);
+
+            const textureLoader = new THREE.TextureLoader();
+            textureLoader.load(
+                "panoramatest.jpg", // Đường dẫn đến ảnh panorama.jpg
+                function (texture) {
+                    const material = new THREE.MeshBasicMaterial({ map: texture });
+                    sphere = new THREE.Mesh(geometry, material);
+                    scene.add(sphere);
+                },
+                undefined,
+                function (error) {
+                    console.error("Lỗi tải ảnh:", error);
+                    alert("Không tải được ảnh. Kiểm tra tên và định dạng ảnh.");
+                }
+            );
+
+            camera.position.set(0, 0, 1);
+
+            // Thêm sự kiện chuột và cảm ứng
+            addMouseControls();
+            addTouchControls();
+
+            // Thiết lập thanh kéo FOV
+            const fovSlider = document.getElementById('fov');
+            const fovValue = document.getElementById('fov-value');
+
+            fovSlider.addEventListener('input', (event) => {
+                const value = event.target.value;
+                fovValue.textContent = value;
+                camera.fov = value; // Cập nhật FOV của camera
+                camera.updateProjectionMatrix(); // Cập nhật ma trận chiếu sau khi thay đổi FOV
+            });
+
+            animate();
+        }
+
+        function addMouseControls() {
+            document.addEventListener("mousedown", (event) => {
+                isDragging = true;
+                previousMousePosition = { x: event.clientX, y: event.clientY };
+            });
+
+            document.addEventListener("mousemove", (event) => {
+                if (isDragging && sphere) {
+                    const deltaX = event.clientX - previousMousePosition.x;
+                    const deltaY = event.clientY - previousMousePosition.y;
+
+                    sphere.rotation.y -= deltaX * 0.005;
+                    sphere.rotation.x -= deltaY * 0.005;
+
+                    previousMousePosition = { x: event.clientX, y: event.clientY };
+                }
+            });
+
+            document.addEventListener("mouseup", () => {
+                isDragging = false;
+            });
+
+            document.addEventListener("mouseleave", () => {
+                isDragging = false; // Dừng xoay khi rời khỏi cửa sổ
+            });
+        }
+
+        function addTouchControls() {
+            document.addEventListener("touchstart", (event) => {
+                isDragging = true;
+                previousMousePosition = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+            });
+
+            document.addEventListener("touchmove", (event) => {
+                if (isDragging && sphere) {
+                    const deltaX = event.touches[0].clientX - previousMousePosition.x;
+                    const deltaY = event.touches[0].clientY - previousMousePosition.y;
+
+                    sphere.rotation.y -= deltaX * 0.005;
+                    sphere.rotation.x -= deltaY * 0.005;
+
+                    previousMousePosition = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+                }
+            });
+
+            document.addEventListener("touchend", () => {
+                isDragging = false;
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>
