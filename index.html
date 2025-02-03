@@ -54,7 +54,7 @@
             // Tạo scene, camera và renderer
             scene = new THREE.Scene();
             const aspectRatio = (window.innerWidth - 60) / (window.innerHeight - 60); // Điều chỉnh tỉ lệ cho camera
-            camera = new THREE.PerspectiveCamera(120, aspectRatio, 0.1, 1000);
+            camera = new THREE.PerspectiveCamera(86, aspectRatio, 0.1, 1000);
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth - 60, window.innerHeight - 60); // Điều chỉnh kích thước canvas
             document.body.appendChild(renderer.domElement);
